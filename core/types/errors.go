@@ -38,3 +38,10 @@ func InvalidStateError(message string) Error {
 		message: message,
 	}
 }
+
+func ParseError(message string) Error {
+	return internalError{
+		code:    "PARSE_ERROR",
+		message: message,
+	}
+}
