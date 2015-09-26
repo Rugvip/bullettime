@@ -24,34 +24,27 @@ import (
 char = A-Z | a-z | 0-9 | "_" | "-";
 valueSeparator = ".";
 tupleSeparator = "_";
-namespaceSeparator = "*";
 
 shardId = 1-2 * char;
 eventIndex = 1-6 * char;
 signalIndex = 1-6 * chat;
 tuple = shardId, valueSeparator, eventIndex, valueSeparator, signalIndex;
-roomTuples = tuple, { tupleSeparator, tuple };
-userTuples = tuple, { tupleSeparator, tuple };
-streamToken = roomTuples, namespaceSeparator, userTuples;
+streamToken = tuple, { tupleSeparator, tuple };
 */
-// A.BC.DE_F.GH.IJ_K.LM.NO*P.Q.R_S.TU.V
+// A.BC.DE_F.GH.IJ_K.LM.NO_P.Q.R_S.TU.V
 
 const valueSeparator = "."
 const tupleSeparator = "_"
-const namespaceSeparator = "*"
 
 type ShardId uint32
 
-type Tuple struct {
+type ShardTuple struct {
 	ShardId     ShardId
 	EventIndex  uint64
 	SignalIndex uint64
 }
 
-type StreamToken struct {
-	RoomTuples []Tuple
-	UserTuples []Tuple
-}
+type StreamToken []ShardTuple
 
 func parseError(message string) Error {
 	return ParseError("failed to parse stream token: " + message)
@@ -119,32 +112,32 @@ func parseValue(str string) (uint64, Error) {
 	return uint64(value), nil
 }
 
-func parseTuple(str string) (Tuple, Error) {
+func parseTuple(str string) (ShardTuple, Error) {
 	valueStrs := strings.Split(str, valueSeparator)
 	if len(valueStrs) != 3 {
-		return Tuple{}, parseError("invalid tuple, " + str)
+		return ShardTuple{}, parseError("invalid tuple, " + str)
 	}
 	shardId, err := parseShardId(valueStrs[0])
 	if err != nil {
-		return Tuple{}, err
+		return ShardTuple{}, err
 	}
 	eventIndex, err := parseValue(valueStrs[1])
 	if err != nil {
-		return Tuple{}, err
+		return ShardTuple{}, err
 	}
 	signalIndex, err := parseValue(valueStrs[2])
 	if err != nil {
-		return Tuple{}, err
+		return ShardTuple{}, err
 	}
-	return Tuple{shardId, eventIndex, signalIndex}, nil
+	return ShardTuple{shardId, eventIndex, signalIndex}, nil
 }
 
-func parseTuples(str string) ([]Tuple, Error) {
+func ParseStreamToken(str string) (StreamToken, Error) {
 	tupleStrs := strings.Split(str, tupleSeparator)
 	if len(str) == 0 {
-		return []Tuple{}, nil
+		return []ShardTuple{}, nil
 	}
-	tuples := make([]Tuple, len(tupleStrs))
+	tuples := make([]ShardTuple, len(tupleStrs))
 	for index, tupleStr := range tupleStrs {
 		tuple, err := parseTuple(tupleStr)
 		if err != nil {
@@ -152,25 +145,5 @@ func parseTuples(str string) ([]Tuple, Error) {
 		}
 		tuples[index] = tuple
 	}
-	return tuples, nil
-}
-
-func ParseStreamToken(str string) (StreamToken, Error) {
-	namespaceStrs := strings.Split(str, namespaceSeparator)
-	if len(namespaceStrs) != 2 {
-		return StreamToken{}, parseError("invalid namespace count")
-	}
-
-	roomStr := namespaceStrs[0]
-	roomTuples, err := parseTuples(roomStr)
-	if err != nil {
-		return StreamToken{}, err
-	}
-
-	userStr := namespaceStrs[1]
-	userTuples, err := parseTuples(userStr)
-	if err != nil {
-		return StreamToken{}, err
-	}
-	return StreamToken{roomTuples, userTuples}, nil
+	return StreamToken(tuples), nil
 }

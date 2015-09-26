@@ -73,48 +73,57 @@ func TestEventStreamMux(t *testing.T) {
 	var err Error
 	var token StreamToken
 
+	expectError(t, "_A.B.C")
+	expectError(t, "A.B.C_")
+	expectError(t, "_A.B.C_")
+
 	token, err = ParseStreamToken("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectLengths(t, token, 0)
+
+	token, err = ParseStreamToken("B.BA.BBA")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectLengths(t, token, 1)
+	expectValues(t, token[0], 1, 64, 64*64+64)
+
+	token, err = ParseStreamToken("B.B.B_B.B.B_B.B.B")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectLengths(t, token, 3)
+	expectValues(t, token[0], 1, 1, 1)
+	expectValues(t, token[0], 1, 1, 1)
+	expectValues(t, token[1], 1, 1, 1)
+
+	token, err = ParseStreamToken("B.B.B_B.B.B_B.B.B")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectLengths(t, token, 3)
+	expectValues(t, token[0], 1, 1, 1)
+	expectValues(t, token[1], 1, 1, 1)
+	expectValues(t, token[2], 1, 1, 1)
+}
+
+func expectError(t *testing.T, str string) {
+	_, err := ParseStreamToken(str)
 	if err == nil {
-		t.Fatal("expected error")
-	}
-	token, err = ParseStreamToken("B.BA.BBA*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	expectLengths(t, token, 1, 0)
-	expectValues(t, token.RoomTuples[0], 1, 64, 64*64+64)
-
-	token, err = ParseStreamToken("B.B.B*B.B.B_B.B.B")
-	if err != nil {
-		t.Fatal(err)
-	}
-	expectLengths(t, token, 1, 2)
-	expectValues(t, token.RoomTuples[0], 1, 1, 1)
-	expectValues(t, token.UserTuples[0], 1, 1, 1)
-	expectValues(t, token.UserTuples[1], 1, 1, 1)
-
-	token, err = ParseStreamToken("*B.B.B_B.B.B_B.B.B")
-	if err != nil {
-		t.Fatal(err)
-	}
-	expectLengths(t, token, 0, 3)
-	expectValues(t, token.UserTuples[0], 1, 1, 1)
-	expectValues(t, token.UserTuples[1], 1, 1, 1)
-	expectValues(t, token.UserTuples[2], 1, 1, 1)
-}
-
-func expectLengths(t *testing.T, token StreamToken, roomLength, userLength int) {
-	if len(token.RoomTuples) != roomLength {
-		t.Fatal("unexpected room length: got " + strconv.Itoa(len(token.RoomTuples)) +
-			", but expected " + strconv.Itoa(roomLength))
-	}
-	if len(token.UserTuples) != userLength {
-		t.Fatal("unexpected user length: got " + strconv.Itoa(len(token.UserTuples)) +
-			", but expected " + strconv.Itoa(userLength))
+		t.Fatal("expected parsing of " + str + " to result in error")
 	}
 }
 
-func expectValues(t *testing.T, tuple Tuple, shardId, eventIndex, signalIndex uint64) {
+func expectLengths(t *testing.T, token StreamToken, tupleCount int) {
+	if len(token) != tupleCount {
+		t.Fatal("unexpected tuple count: got " + strconv.Itoa(len(token)) +
+			", but expected " + strconv.Itoa(tupleCount))
+	}
+}
+
+func expectValues(t *testing.T, tuple ShardTuple, shardId, eventIndex, signalIndex uint64) {
 	if tuple.ShardId != ShardId(shardId) {
 		t.Fatal("unexpected shard id: got " + strconv.Itoa(int(tuple.ShardId)) +
 			", but expected " + strconv.Itoa(int(shardId)))
