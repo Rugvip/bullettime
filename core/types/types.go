@@ -38,6 +38,11 @@ type IndexedEvent interface {
 	Index() uint64
 }
 
+type IndexedEventId struct {
+	EventId
+	Index uint64
+}
+
 type TypedContent interface {
 	GetEventType() string
 }
