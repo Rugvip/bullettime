@@ -49,6 +49,11 @@ type IdDataCache interface {
 	Lookup(id types.Id, fieldId int) interface{}
 }
 
+type Counter interface {
+	Get() uint64
+	Inc() uint64
+}
+
 type State interface {
 	Key() string
 	Value() []byte
