@@ -49,6 +49,12 @@ type IdDataCache interface {
 	Lookup(id types.Id, fieldId int) interface{}
 }
 
+type IdDataStore interface {
+	Put(id types.Id, data interface{}) types.Error
+	Lookup(id types.Id) (data interface{}, err types.Error)
+	LookupMany(ids []types.Id) (data []interface{}, err types.Error)
+}
+
 type Counter interface {
 	Get() uint64
 	Inc() uint64
