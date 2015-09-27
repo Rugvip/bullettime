@@ -61,12 +61,12 @@ type Counter interface {
 }
 
 type SignalBuffer interface {
-	PushSignal(eventId types.EventId, recipients []types.UserId) types.Error
+	PushSignal(eventInfo types.EventInfo, recipients []types.UserId) types.Error
 	Max() uint64
 	Range(
 		recipient types.UserId,
 		fromIndex, toIndex uint64,
-	) ([]types.IndexedEventId, types.Error)
+	) (events []types.EventInfo, maxIndex uint64, err types.Error)
 }
 
 type State interface {

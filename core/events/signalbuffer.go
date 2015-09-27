@@ -25,39 +25,44 @@ import (
 //TODO: garbage collection(?)
 type signalBuffer struct {
 	lock    sync.RWMutex
-	signals map[types.UserId][]types.IndexedEventId
+	signals map[types.UserId][]indexedSignal
 	counter interfaces.Counter
+}
+
+type indexedSignal struct {
+	info  types.EventInfo
+	index uint64
 }
 
 func NewSignalBuffer(
 	counter interfaces.Counter,
 ) (interfaces.SignalBuffer, error) {
 	return &signalBuffer{
-		signals: map[types.UserId][]types.IndexedEventId{},
+		signals: map[types.UserId][]indexedSignal{},
 		counter: counter,
 	}, nil
 }
 
-func (s *signalBuffer) PushSignal(eventId types.EventId, recipients []types.UserId) types.Error {
+func (s *signalBuffer) PushSignal(eventInfo types.EventInfo, recipients []types.UserId) types.Error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	index := s.counter.Inc() - 1
 	for _, userId := range recipients {
 		signals, existed := s.signals[userId]
 		if !existed {
-			signals = []types.IndexedEventId{}
+			signals = []indexedSignal{}
 		}
-		replaced := false
-		for _, signal := range signals {
-			if signal.EventId == eventId {
-				replaced = true
-				signal.EventId = eventId
-				signal.Index = index
+		pos := -1
+		for i, signal := range signals {
+			if signal.info.EventId == eventInfo.EventId {
+				pos = i
 				break
 			}
 		}
-		if !replaced {
-			signal := types.IndexedEventId{eventId, index}
+		signal := indexedSignal{eventInfo, index}
+		if pos >= 0 {
+			signals[pos] = signal
+		} else {
 			s.signals[userId] = append(signals, signal)
 		}
 	}
@@ -71,21 +76,24 @@ func (s *signalBuffer) Max() uint64 {
 func (s *signalBuffer) Range(
 	recipient types.UserId,
 	fromIndex, toIndex uint64,
-) ([]types.IndexedEventId, types.Error) {
+) (events []types.EventInfo, maxIndex uint64, err types.Error) {
 	if fromIndex >= toIndex {
-		return []types.IndexedEventId{}, nil
+		return []types.EventInfo{}, 0, nil
 	}
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	signals := s.signals[recipient]
 	if signals == nil {
-		return []types.IndexedEventId{}, nil
+		return []types.EventInfo{}, 0, nil
 	}
-	result := make([]types.IndexedEventId, 0, len(signals))
+	events = make([]types.EventInfo, 0, len(signals))
 	for _, signal := range signals {
-		if signal.Index >= fromIndex && signal.Index < toIndex {
-			result = append(result, signal)
+		if signal.index >= fromIndex && signal.index < toIndex {
+			events = append(events, signal.info)
+			if maxIndex < signal.index {
+				maxIndex = signal.index
+			}
 		}
 	}
-	return result, nil
+	return events, maxIndex, nil
 }
