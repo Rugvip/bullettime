@@ -21,79 +21,83 @@ import (
 	"github.com/matrix-org/bullettime/core/types"
 )
 
-// Each user get their own buffer of received signals
+// Each user get their own buffer of received events
 //TODO: garbage collection(?)
-type signalBuffer struct {
+type fanOutStreamBuffer struct {
 	lock    sync.RWMutex
-	signals map[types.UserId][]indexedSignal
+	events  map[types.Id][]indexedFanOutEvent
 	counter interfaces.Counter
 }
 
-type indexedSignal struct {
+type indexedFanOutEvent struct {
 	info  types.EventInfo
 	index uint64
 }
 
-func NewSignalBuffer(
+func NewFanOutStreamBuffer(
 	counter interfaces.Counter,
-) (interfaces.SignalBuffer, error) {
-	return &signalBuffer{
-		signals: map[types.UserId][]indexedSignal{},
+) (interfaces.FanOutStream, error) {
+	return &fanOutStreamBuffer{
+		events:  map[types.Id][]indexedFanOutEvent{},
 		counter: counter,
 	}, nil
 }
 
-func (s *signalBuffer) PushSignal(eventInfo types.EventInfo, recipients []types.UserId) types.Error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	index := s.counter.Inc() - 1
+func (sb *fanOutStreamBuffer) Send(eventInfo types.EventInfo, recipients []types.Id) types.Error {
+	sb.lock.Lock()
+	defer sb.lock.Unlock()
+	index := sb.counter.Inc() - 1
 	for _, userId := range recipients {
-		signals, existed := s.signals[userId]
+		events, existed := sb.events[userId]
 		if !existed {
-			signals = []indexedSignal{}
+			events = []indexedFanOutEvent{}
 		}
 		pos := -1
-		for i, signal := range signals {
-			if signal.info.EventId == eventInfo.EventId {
+		for i, event := range events {
+			if event.info.EventId == eventInfo.EventId {
 				pos = i
 				break
 			}
 		}
-		signal := indexedSignal{eventInfo, index}
+		event := indexedFanOutEvent{eventInfo, index}
 		if pos >= 0 {
-			signals[pos] = signal
+			events[pos] = event
 		} else {
-			s.signals[userId] = append(signals, signal)
+			sb.events[userId] = append(events, event)
 		}
 	}
 	return nil
 }
 
-func (s *signalBuffer) Max() uint64 {
-	return s.counter.Get()
+func (sb *fanOutStreamBuffer) Max() uint64 {
+	return sb.counter.Get()
 }
 
-func (s *signalBuffer) Range(
-	recipient types.UserId,
+func (sb *fanOutStreamBuffer) Range(
+	recipient types.Id,
 	fromIndex, toIndex uint64,
-) (events []types.EventInfo, maxIndex uint64, err types.Error) {
+	limit uint,
+) (result []types.EventInfo, minIndex, maxIndex uint64, err types.Error) {
 	if fromIndex >= toIndex {
-		return []types.EventInfo{}, 0, nil
+		return []types.EventInfo{}, fromIndex, fromIndex, nil
 	}
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	signals := s.signals[recipient]
-	if signals == nil {
-		return []types.EventInfo{}, 0, nil
+	sb.lock.Lock()
+	defer sb.lock.Unlock()
+	events := sb.events[recipient]
+	if events == nil {
+		return []types.EventInfo{}, fromIndex, toIndex, nil
 	}
-	events = make([]types.EventInfo, 0, len(signals))
-	for _, signal := range signals {
-		if signal.index >= fromIndex && signal.index < toIndex {
-			events = append(events, signal.info)
-			if maxIndex < signal.index {
-				maxIndex = signal.index
+	result = make([]types.EventInfo, 0, len(events))
+	for _, event := range events {
+		if limit > 0 && len(result) >= int(limit) {
+			break
+		}
+		if event.index >= fromIndex && event.index < toIndex {
+			result = append(result, event.info)
+			if maxIndex < event.index {
+				maxIndex = event.index
 			}
 		}
 	}
-	return events, maxIndex, nil
+	return result, fromIndex, maxIndex, nil
 }

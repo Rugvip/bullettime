@@ -60,13 +60,24 @@ type Counter interface {
 	Inc() uint64
 }
 
-type SignalBuffer interface {
-	PushSignal(eventInfo types.EventInfo, recipients []types.UserId) types.Error
+type FanOutStream interface {
+	Send(eventInfo types.EventInfo, recipients []types.Id) types.Error
 	Max() uint64
 	Range(
-		recipient types.UserId,
+		recipient types.Id,
 		fromIndex, toIndex uint64,
-	) (events []types.EventInfo, maxIndex uint64, err types.Error)
+		limit uint,
+	) (events []types.EventInfo, minIndex, maxIndex uint64, err types.Error)
+}
+
+type FanInStream interface {
+	Send(eventInfo types.EventInfo, recipient types.Id) types.Error
+	Max() uint64
+	Range(
+		recipients []types.Id,
+		fromIndex, toIndex uint64,
+		limit uint,
+	) (events []types.EventInfo, minIndex, maxIndex uint64, err types.Error)
 }
 
 type State interface {

@@ -21,9 +21,9 @@ import (
 	"github.com/matrix-org/bullettime/core/types"
 )
 
-func TestSignalBuffer(t *testing.T) {
+func TestFanOutStream(t *testing.T) {
 	counter := NewCounter(0)
-	b, err := NewSignalBuffer(counter)
+	b, err := NewFanOutStreamBuffer(counter)
 	if err != nil {
 		t.Fatal("failed to create signal buffer: ", err)
 	}
@@ -33,8 +33,8 @@ func TestSignalBuffer(t *testing.T) {
 	buffer.Range("user1", 0, 2, 0, "event1")
 	buffer.Range("user2", 0, 1, 0, "event1")
 	buffer.Range("user1", 0, 0, 0)
-	buffer.Range("user3", 0, 2, 0)
-	buffer.Range("user1", 2, 0, 0)
+	buffer.Range("user3", 0, 2, 2)
+	buffer.Range("user1", 2, 0, 2)
 	buffer.Push("event2", "user1")
 	buffer.Range("user1", 0, 2, 1, "event1", "event2")
 	buffer.Range("user2", 0, 2, 0, "event1")
@@ -47,15 +47,15 @@ func TestSignalBuffer(t *testing.T) {
 
 type testBuffer struct {
 	t      *testing.T
-	buffer interfaces.SignalBuffer
+	buffer interfaces.FanOutStream
 }
 
 func (b *testBuffer) Push(id string, users ...string) {
-	userIds := make([]types.UserId, len(users))
+	userIds := make([]types.Id, len(users))
 	for i, user := range users {
-		userIds[i] = types.NewUserId(user, "test")
+		userIds[i] = types.Id(types.NewUserId(user, "test"))
 	}
-	err := b.buffer.PushSignal(types.EventInfo{
+	err := b.buffer.Send(types.EventInfo{
 		EventId:   types.NewEventId(id, "test"),
 		Sender:    types.NewUserId("tester", "test"),
 		ContextId: types.Id(types.NewRoomId("room1", "test")),
@@ -67,12 +67,15 @@ func (b *testBuffer) Push(id string, users ...string) {
 }
 
 func (b *testBuffer) Range(user string, from, to, expectedIndex uint64, expected ...string) {
-	signals, maxIndex, err := b.buffer.Range(types.NewUserId(user, "test"), from, to)
+	signals, minIndex, maxIndex, err := b.buffer.Range(types.Id(types.NewUserId(user, "test")), from, to, 0)
 	if err != nil {
 		b.t.Fatal("failed to get signal range: ", err)
 	}
 	if len(signals) != len(expected) {
 		b.t.Fatalf("invalid signal count, expected %d but got %d", len(expected), len(signals))
+	}
+	if from != minIndex {
+		b.t.Fatalf("invalid max index, expected %d but got %d", from, minIndex)
 	}
 	if expectedIndex != maxIndex {
 		b.t.Fatalf("invalid max index, expected %d but got %d", expectedIndex, maxIndex)
