@@ -43,7 +43,11 @@ func NewFanOutStreamBuffer(
 	}, nil
 }
 
-func (sb *fanOutStreamBuffer) Send(eventInfo types.EventInfo, recipients []types.Id) types.Error {
+func (sb *fanOutStreamBuffer) Send(eventInfo types.EventInfo, recipient types.Id) types.Error {
+	return sb.SendMany(eventInfo, []types.Id{recipient})
+}
+
+func (sb *fanOutStreamBuffer) SendMany(eventInfo types.EventInfo, recipients []types.Id) types.Error {
 	sb.lock.Lock()
 	defer sb.lock.Unlock()
 	index := sb.counter.Inc() - 1

@@ -61,7 +61,8 @@ type Counter interface {
 }
 
 type FanOutStream interface {
-	Send(eventInfo types.EventInfo, recipients []types.Id) types.Error
+	SendMany(eventInfo types.EventInfo, recipients []types.Id) types.Error
+	Send(eventInfo types.EventInfo, recipient types.Id) types.Error
 	Max() uint64
 	Range(
 		recipient types.Id,
@@ -74,6 +75,11 @@ type FanInStream interface {
 	Send(eventInfo types.EventInfo, recipient types.Id) types.Error
 	Max() uint64
 	Range(
+		recipient types.Id,
+		fromIndex, toIndex uint64,
+		limit uint,
+	) (events []types.EventInfo, minIndex, maxIndex uint64, err types.Error)
+	RangeMany(
 		recipients []types.Id,
 		fromIndex, toIndex uint64,
 		limit uint,
