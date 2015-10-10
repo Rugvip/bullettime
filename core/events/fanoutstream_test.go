@@ -15,6 +15,7 @@
 package events
 
 import (
+	"runtime/debug"
 	"testing"
 
 	"github.com/matrix-org/bullettime/core/interfaces"
@@ -30,19 +31,26 @@ func TestFanOutStream(t *testing.T) {
 	buffer := fanOutTestBuffer{t, b}
 
 	buffer.Push("event1", "user1", "user2")
-	buffer.Select("user1", 0, 2, 0, "event1")
-	buffer.Select("user2", 0, 1, 0, "event1")
-	buffer.Select("user1", 0, 0, 0)
-	buffer.Select("user3", 0, 2, 2)
-	buffer.Select("user1", 2, 0, 2)
+	buffer.Select("user1", 0, 2, 0, 1, "event1")
+	buffer.Select("user2", 0, 1, 0, 1, "event1")
+	buffer.Select("user1", 0, 0, 0, 0)
+	buffer.Select("user3", 0, 2, 0, 1)
+	buffer.Select("user0", 0, 2, 0, 1)
 	buffer.Push("event2", "user1")
-	buffer.Select("user1", 0, 2, 1, "event1", "event2")
-	buffer.Select("user2", 0, 2, 0, "event1")
+	buffer.Select("user1", 0, 2, 0, 2, "event1", "event2")
+	buffer.Select("user2", 0, 2, 0, 2, "event1")
 	buffer.Push("event3", "user1", "user3")
-	buffer.Select("user1", 0, 3, 2, "event1", "event2", "event3")
-	buffer.Select("user1", 0, 2, 1, "event1", "event2")
-	buffer.Select("user1", 1, 3, 2, "event2", "event3")
-	buffer.Select("user3", 0, 3, 2, "event3")
+	buffer.Select("user1", 0, 3, 0, 3, "event1", "event2", "event3")
+	buffer.Select("user1", 0, 2, 0, 2, "event1", "event2")
+	buffer.Select("user1", 1, 3, 1, 3, "event2", "event3")
+	buffer.Select("user2", 0, 3, 0, 3, "event1")
+	buffer.Select("user2", 0, 5, 0, 3, "event1")
+	buffer.Select("user2", 4, 5, 3, 3)
+	buffer.Select("user3", 0, 3, 0, 3, "event3")
+
+	expectPanic(t, func() {
+		buffer.Select("user1", 2, 0, 0, 0)
+	})
 }
 
 type fanOutTestBuffer struct {
@@ -66,22 +74,27 @@ func (b *fanOutTestBuffer) Push(id string, users ...string) {
 	}
 }
 
-func (b *fanOutTestBuffer) Select(user string, from, to, expectedIndex uint64, expected ...string) {
-	signals, minIndex, maxIndex, err := b.buffer.SelectForwards(types.Id(types.NewUserId(user, "test")), from, to)
+func (b *fanOutTestBuffer) Select(user string, from, to, expectedFromIndex, expectedToIndex uint64, expected ...string) {
+	signals, fromIndex, toIndex, err := b.buffer.SelectForwards(types.Id(types.NewUserId(user, "test")), from, to)
 	if err != nil {
+		debug.PrintStack()
 		b.t.Fatal("failed to get signal range: ", err)
 	}
 	if len(signals) != len(expected) {
+		debug.PrintStack()
 		b.t.Fatalf("invalid signal count, expected %d but got %d", len(expected), len(signals))
 	}
-	if from != minIndex {
-		b.t.Fatalf("invalid min index, expected %d but got %d", from, minIndex)
+	if expectedFromIndex != fromIndex {
+		debug.PrintStack()
+		b.t.Fatalf("invalid from index, expected %d but got %d", expectedFromIndex, fromIndex)
 	}
-	if expectedIndex != maxIndex {
-		b.t.Fatalf("invalid max index, expected %d but got %d", expectedIndex, maxIndex)
+	if expectedToIndex != toIndex {
+		debug.PrintStack()
+		b.t.Fatalf("invalid to index, expected %d but got %d", expectedToIndex, toIndex)
 	}
 	for i, signal := range signals {
 		if signal.EventId.Id != expected[i] {
+			debug.PrintStack()
 			b.t.Fatalf("invalid event id: expected %s, got %s", expected[i], signal.EventId.Id)
 		}
 	}

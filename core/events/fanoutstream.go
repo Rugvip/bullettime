@@ -15,6 +15,7 @@
 package events
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/matrix-org/bullettime/core/interfaces"
@@ -75,25 +76,34 @@ func (sb *fanOutStreamBuffer) Max() uint64 {
 
 func (sb *fanOutStreamBuffer) SelectForwards(
 	recipient types.Id,
-	fromIndex, toIndex uint64,
-) (result []types.EventInfo, minIndex, maxIndex uint64, err types.Error) {
-	if fromIndex >= toIndex {
-		return []types.EventInfo{}, fromIndex, fromIndex, nil
+	from, to uint64,
+) (result []types.EventInfo, fromIndex, toIndex uint64, err types.Error) {
+	if from > to {
+		panic(fmt.Sprintf("Invalid arguments: from > to, (%d > %d)", from, to))
+	}
+	if from == to {
+		return []types.EventInfo{}, from, from, nil
 	}
 	sb.lock.Lock()
 	defer sb.lock.Unlock()
+
+	max := sb.counter.Get()
+	if to > max {
+		to = max
+	}
+	if from >= to {
+		return []types.EventInfo{}, to, to, nil
+	}
+
 	events := sb.events[recipient]
 	if events == nil {
-		return []types.EventInfo{}, fromIndex, toIndex, nil
+		return []types.EventInfo{}, from, max, nil
 	}
 	result = make([]types.EventInfo, 0, len(events))
 	for _, event := range events {
-		if event.index >= fromIndex && event.index < toIndex {
+		if event.index >= from && event.index < to {
 			result = append(result, event.info)
-			if maxIndex < event.index {
-				maxIndex = event.index
-			}
 		}
 	}
-	return result, fromIndex, maxIndex, nil
+	return result, from, to, nil
 }
