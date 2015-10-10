@@ -75,7 +75,7 @@ func (b *fanOutTestBuffer) Select(user string, from, to, expectedIndex uint64, e
 		b.t.Fatalf("invalid signal count, expected %d but got %d", len(expected), len(signals))
 	}
 	if from != minIndex {
-		b.t.Fatalf("invalid max index, expected %d but got %d", from, minIndex)
+		b.t.Fatalf("invalid min index, expected %d but got %d", from, minIndex)
 	}
 	if expectedIndex != maxIndex {
 		b.t.Fatalf("invalid max index, expected %d but got %d", expectedIndex, maxIndex)
