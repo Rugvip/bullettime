@@ -99,11 +99,26 @@ func (sb *fanOutStreamBuffer) SelectForwards(
 	if events == nil {
 		return []types.EventInfo{}, from, max, nil
 	}
-	result = make([]types.EventInfo, 0, len(events))
-	for _, event := range events {
-		if event.index >= from && event.index < to {
-			result = append(result, event.info)
+	end := len(events)
+	for end > 0 {
+		if events[end-1].index >= to {
+			end -= 1
+		} else {
+			break
 		}
+	}
+	start := end - 1
+	for start > 0 {
+		if events[start].index > from {
+			start -= 1
+		} else {
+			break
+		}
+	}
+	indexedResult := events[start:end]
+	result = make([]types.EventInfo, 0, len(indexedResult))
+	for _, indexed := range indexedResult {
+		result = append(result, indexed.info)
 	}
 	return result, from, to, nil
 }
