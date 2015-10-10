@@ -55,31 +55,53 @@ type IdDataStore interface {
 	LookupMany(ids []types.Id) (data []interface{}, err types.Error)
 }
 
+// A counter to be shared between multiple consumers, operations must be atomic
 type Counter interface {
 	Get() uint64
+	// Increments the counter by 1 and returns the new value
 	Inc() uint64
 }
 
+// A stream where each event has multiple recipients, but queries are done for a single recipient
 type FanOutStream interface {
+	// Sends an event to a set of recipients
 	Send(eventInfo types.EventInfo, recipients []types.Id) types.Error
+
+	// Gets the current maximum index, this is the highest index of any event + 1
 	Max() uint64
+
+	// Queries events for a recipient in chronological order.
+	// from <= to, fromIndex <= toIndex
+	// from index is inclusive, while to index is exclusive
 	SelectForwards(
 		recipient types.Id,
 		from, to uint64,
-	) (events []types.EventInfo, minIndex, maxIndex uint64, err types.Error)
+	) (events []types.EventInfo, fromIndex, toIndex uint64, err types.Error)
 }
 
+// A stream where each even has a single recipient, but queries can span multiple recipients
 type FanInStream interface {
+	// Sends an event to a single recipient
 	Send(eventInfo types.EventInfo, recipient types.Id) types.Error
+
+	// Gets the current maximum index, this is the highest index of any event + 1
 	Max() uint64
+
+	// Queries past events for a single recipient in reversed chronological order.
+	// from >= to, fromIndex >= toIndex
+	// from index is exclusive, while to index is inclusive
 	SelectBackwards(
 		recipient types.Id,
 		from, to uint64,
-	) (events []types.EventInfo, minIndex, maxIndex uint64, err types.Error)
+	) (events []types.EventInfo, fromIndex, toIndex uint64, err types.Error)
+
+	// Queries events for a set of recipients in chronological order.
+	// from <= to, fromIndex <= toIndex
+	// from index is inclusive, while to index is exclusive
 	SelectForwards(
 		recipients []types.Id,
 		from, to uint64,
-	) (events []types.EventInfo, minIndex, maxIndex uint64, err types.Error)
+	) (events []types.EventInfo, fromIndex, toIndex uint64, err types.Error)
 }
 
 type State interface {
