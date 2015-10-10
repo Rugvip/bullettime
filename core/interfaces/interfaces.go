@@ -64,25 +64,22 @@ type FanOutStream interface {
 	SendMany(eventInfo types.EventInfo, recipients []types.Id) types.Error
 	Send(eventInfo types.EventInfo, recipient types.Id) types.Error
 	Max() uint64
-	Range(
+	SelectForwards(
 		recipient types.Id,
-		fromIndex, toIndex uint64,
-		limit uint,
+		from, to uint64,
 	) (events []types.EventInfo, minIndex, maxIndex uint64, err types.Error)
 }
 
 type FanInStream interface {
 	Send(eventInfo types.EventInfo, recipient types.Id) types.Error
 	Max() uint64
-	Range(
+	SelectBackwards(
 		recipient types.Id,
-		fromIndex, toIndex uint64,
-		limit uint,
+		from, to uint64,
 	) (events []types.EventInfo, minIndex, maxIndex uint64, err types.Error)
-	RangeMany(
+	SelectForwards(
 		recipients []types.Id,
-		fromIndex, toIndex uint64,
-		limit uint,
+		from, to uint64,
 	) (events []types.EventInfo, minIndex, maxIndex uint64, err types.Error)
 }
 

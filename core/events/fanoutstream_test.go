@@ -30,19 +30,19 @@ func TestFanOutStream(t *testing.T) {
 	buffer := testBuffer{t, b}
 
 	buffer.Push("event1", "user1", "user2")
-	buffer.Range("user1", 0, 2, 0, "event1")
-	buffer.Range("user2", 0, 1, 0, "event1")
-	buffer.Range("user1", 0, 0, 0)
-	buffer.Range("user3", 0, 2, 2)
-	buffer.Range("user1", 2, 0, 2)
+	buffer.Select("user1", 0, 2, 0, "event1")
+	buffer.Select("user2", 0, 1, 0, "event1")
+	buffer.Select("user1", 0, 0, 0)
+	buffer.Select("user3", 0, 2, 2)
+	buffer.Select("user1", 2, 0, 2)
 	buffer.Push("event2", "user1")
-	buffer.Range("user1", 0, 2, 1, "event1", "event2")
-	buffer.Range("user2", 0, 2, 0, "event1")
+	buffer.Select("user1", 0, 2, 1, "event1", "event2")
+	buffer.Select("user2", 0, 2, 0, "event1")
 	buffer.Push("event3", "user1", "user3")
-	buffer.Range("user1", 0, 3, 2, "event1", "event2", "event3")
-	buffer.Range("user1", 0, 2, 1, "event1", "event2")
-	buffer.Range("user1", 1, 3, 2, "event2", "event3")
-	buffer.Range("user3", 0, 3, 2, "event3")
+	buffer.Select("user1", 0, 3, 2, "event1", "event2", "event3")
+	buffer.Select("user1", 0, 2, 1, "event1", "event2")
+	buffer.Select("user1", 1, 3, 2, "event2", "event3")
+	buffer.Select("user3", 0, 3, 2, "event3")
 }
 
 type testBuffer struct {
@@ -66,8 +66,8 @@ func (b *testBuffer) Push(id string, users ...string) {
 	}
 }
 
-func (b *testBuffer) Range(user string, from, to, expectedIndex uint64, expected ...string) {
-	signals, minIndex, maxIndex, err := b.buffer.Range(types.Id(types.NewUserId(user, "test")), from, to, 0)
+func (b *testBuffer) Select(user string, from, to, expectedIndex uint64, expected ...string) {
+	signals, minIndex, maxIndex, err := b.buffer.SelectForwards(types.Id(types.NewUserId(user, "test")), from, to)
 	if err != nil {
 		b.t.Fatal("failed to get signal range: ", err)
 	}

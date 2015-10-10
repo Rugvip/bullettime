@@ -77,10 +77,9 @@ func (sb *fanOutStreamBuffer) Max() uint64 {
 	return sb.counter.Get()
 }
 
-func (sb *fanOutStreamBuffer) Range(
+func (sb *fanOutStreamBuffer) SelectForwards(
 	recipient types.Id,
 	fromIndex, toIndex uint64,
-	limit uint,
 ) (result []types.EventInfo, minIndex, maxIndex uint64, err types.Error) {
 	if fromIndex >= toIndex {
 		return []types.EventInfo{}, fromIndex, fromIndex, nil
@@ -93,9 +92,6 @@ func (sb *fanOutStreamBuffer) Range(
 	}
 	result = make([]types.EventInfo, 0, len(events))
 	for _, event := range events {
-		if limit > 0 && len(result) >= int(limit) {
-			break
-		}
 		if event.index >= fromIndex && event.index < toIndex {
 			result = append(result, event.info)
 			if maxIndex < event.index {
