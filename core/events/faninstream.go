@@ -70,7 +70,7 @@ func (s *fanInStream) Max() uint64 {
 func (s *fanInStream) SelectBackwards(
 	recipient types.Id,
 	from, to uint64,
-) (result []types.EventInfo, minIndex, maxIndex uint64, err types.Error) {
+) (result []types.EventInfo, fromIndex, toIndex uint64, err types.Error) {
 	if from < to {
 		panic(fmt.Sprintf("Invalid arguments: from < to, (%d < %d)", from, to))
 	}
@@ -78,28 +78,28 @@ func (s *fanInStream) SelectBackwards(
 	defer s.lock.RUnlock()
 	segment := s.segments[recipient]
 	if segment == nil {
-		return []types.EventInfo{}, from, to, nil
+		return []types.EventInfo{}, 0, 0, nil
 	}
 
-	max := len(*segment) - 1
-	if from >= uint64(max) {
+	max := len(*segment)
+	if from > uint64(max) {
 		from = uint64(max)
 	}
-	if from < to {
+	if from <= to {
 		return result, from, from, nil
 	}
 	events := (*segment)[to:from]
 	eventCount := len(events)
-	result = make([]types.EventInfo, 0, eventCount)
-	for _, indexed := range events {
-		result = append(result, indexed.info)
+	result = make([]types.EventInfo, eventCount)
+	for i, indexed := range events {
+		result[eventCount-i-1] = indexed.info
 	}
-	return result, events[0].index - 1, events[eventCount-1].index, nil
+	return result, from, to, nil
 }
 func (s *fanInStream) SelectForwards(
 	recipients []types.Id,
 	from, to uint64,
-) (result []types.EventInfo, minIndex, maxIndex uint64, err types.Error) {
+) (result []types.EventInfo, fromIndex, toIndex uint64, err types.Error) {
 	if from > to {
 		panic(fmt.Sprintf("Invalid arguments: from > to, (%d > %d)", from, to))
 	}
@@ -111,9 +111,8 @@ func (s *fanInStream) SelectForwards(
 	if to > max {
 		to = max
 	}
-	to -= 1
 	if from >= to {
-		return result, max, max, nil
+		return result, to, to, nil
 	}
 
 	indexedResult := []indexedFanInEvent{}
@@ -126,18 +125,23 @@ func (s *fanInStream) SelectForwards(
 		i := len(*segment) - 1
 		for i >= 0 {
 			indexed := (*segment)[i]
-			if indexed.index > to {
+			i -= 1
+			if indexed.index >= to {
 				continue
 			}
 			if indexed.index < from {
 				break
 			}
 			indexedResult = append(indexedResult, indexed)
-			i -= 1
 		}
 	}
 
 	sort.Sort(eventsByIndex(indexedResult))
 
-	return result, from, max, nil
+	result = make([]types.EventInfo, len(indexedResult))
+	for i := range indexedResult {
+		result[i] = indexedResult[i].info
+	}
+
+	return result, from, to, nil
 }
