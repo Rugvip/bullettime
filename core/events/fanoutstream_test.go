@@ -27,7 +27,7 @@ func TestFanOutStream(t *testing.T) {
 	if err != nil {
 		t.Fatal("failed to create signal buffer: ", err)
 	}
-	buffer := testBuffer{t, b}
+	buffer := fanOutTestBuffer{t, b}
 
 	buffer.Push("event1", "user1", "user2")
 	buffer.Select("user1", 0, 2, 0, "event1")
@@ -45,12 +45,12 @@ func TestFanOutStream(t *testing.T) {
 	buffer.Select("user3", 0, 3, 2, "event3")
 }
 
-type testBuffer struct {
+type fanOutTestBuffer struct {
 	t      *testing.T
 	buffer interfaces.FanOutStream
 }
 
-func (b *testBuffer) Push(id string, users ...string) {
+func (b *fanOutTestBuffer) Push(id string, users ...string) {
 	userIds := make([]types.Id, len(users))
 	for i, user := range users {
 		userIds[i] = types.Id(types.NewUserId(user, "test"))
@@ -66,7 +66,7 @@ func (b *testBuffer) Push(id string, users ...string) {
 	}
 }
 
-func (b *testBuffer) Select(user string, from, to, expectedIndex uint64, expected ...string) {
+func (b *fanOutTestBuffer) Select(user string, from, to, expectedIndex uint64, expected ...string) {
 	signals, minIndex, maxIndex, err := b.buffer.SelectForwards(types.Id(types.NewUserId(user, "test")), from, to)
 	if err != nil {
 		b.t.Fatal("failed to get signal range: ", err)
