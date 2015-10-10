@@ -61,8 +61,7 @@ type Counter interface {
 }
 
 type FanOutStream interface {
-	SendMany(eventInfo types.EventInfo, recipients []types.Id) types.Error
-	Send(eventInfo types.EventInfo, recipient types.Id) types.Error
+	Send(eventInfo types.EventInfo, recipients []types.Id) types.Error
 	Max() uint64
 	SelectForwards(
 		recipient types.Id,

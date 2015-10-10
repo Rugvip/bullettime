@@ -55,7 +55,7 @@ func (b *testBuffer) Push(id string, users ...string) {
 	for i, user := range users {
 		userIds[i] = types.Id(types.NewUserId(user, "test"))
 	}
-	err := b.buffer.SendMany(types.EventInfo{
+	err := b.buffer.Send(types.EventInfo{
 		EventId:   types.NewEventId(id, "test"),
 		Sender:    types.NewUserId("tester", "test"),
 		ContextId: types.Id(types.NewRoomId("room1", "test")),
