@@ -64,8 +64,8 @@ func (b *fanOutTestBuffer) Push(id string, users ...string) {
 		userIds[i] = types.Id(types.NewUserId(user, "test"))
 	}
 	err := b.buffer.Send(types.EventInfo{
-		EventId:   types.NewEventId(id, "test"),
-		Sender:    types.NewUserId("tester", "test"),
+		EventId:   types.Id(types.NewEventId(id, "test")),
+		Sender:    types.Id(types.NewUserId("tester", "test")),
 		ContextId: types.Id(types.NewRoomId("room1", "test")),
 		EventType: "m.test",
 	}, userIds)

@@ -40,9 +40,13 @@ type IndexedEvent interface {
 
 type EventInfo struct {
 	ContextId Id
-	EventId   EventId
-	Sender    UserId
+	EventId   Id
+	Sender    Id
 	EventType string
+}
+
+func NewEventInfo(contextId, eventId, sender Id, eventType string) EventInfo {
+	return EventInfo{contextId, eventId, sender, eventType}
 }
 
 type TypedContent interface {

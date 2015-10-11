@@ -97,8 +97,8 @@ type fanInTestBuffer struct {
 
 func (b *fanInTestBuffer) Send(id string, user string) {
 	err := b.buffer.Send(types.EventInfo{
-		EventId:   types.NewEventId(id, "test"),
-		Sender:    types.NewUserId("tester", "test"),
+		EventId:   types.Id(types.NewEventId(id, "test")),
+		Sender:    types.Id(types.NewUserId("tester", "test")),
 		ContextId: types.Id(types.NewRoomId("room1", "test")),
 		EventType: "m.test",
 	}, types.Id(types.NewUserId(user, "test")))
