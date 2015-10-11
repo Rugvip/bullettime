@@ -30,13 +30,13 @@ func TestFanInStream(t *testing.T) {
 	}
 	buffer := fanInTestBuffer{t, b}
 
-	buffer.Send("event1", "user1")
-	buffer.Send("event2", "user2")
-	buffer.Send("event3", "user1")
-	buffer.Send("event4", "user1")
-	buffer.Send("event5", "user2")
-	buffer.Send("event6", "user3")
-	buffer.Send("event7", "user1")
+	buffer.Send("event1", "user1", 0)
+	buffer.Send("event2", "user2", 1)
+	buffer.Send("event3", "user1", 2)
+	buffer.Send("event4", "user1", 3)
+	buffer.Send("event5", "user2", 4)
+	buffer.Send("event6", "user3", 5)
+	buffer.Send("event7", "user1", 6)
 
 	buffer.SelectBackwards("user3", 2, 0, 1, 0, "event6")
 	buffer.SelectBackwards("user3", 1, 0, 1, 0, "event6")
@@ -95,8 +95,8 @@ type fanInTestBuffer struct {
 	buffer interfaces.FanInStream
 }
 
-func (b *fanInTestBuffer) Send(id string, user string) {
-	err := b.buffer.Send(types.EventInfo{
+func (b *fanInTestBuffer) Send(id string, user string, expectedIndex uint64) {
+	index, err := b.buffer.Send(types.EventInfo{
 		EventId:   types.Id(types.NewEventId(id, "test")),
 		Sender:    types.Id(types.NewUserId("tester", "test")),
 		ContextId: types.Id(types.NewRoomId("room1", "test")),
@@ -105,6 +105,10 @@ func (b *fanInTestBuffer) Send(id string, user string) {
 	if err != nil {
 		debug.PrintStack()
 		b.t.Fatal("error pushing signal: ", err)
+	}
+	if index != expectedIndex {
+		debug.PrintStack()
+		b.t.Fatal("invalid index, expected %d but got %d", expectedIndex, index)
 	}
 }
 

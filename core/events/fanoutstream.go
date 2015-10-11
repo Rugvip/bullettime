@@ -44,7 +44,7 @@ func NewFanOutStreamBuffer(
 	}, nil
 }
 
-func (sb *fanOutStreamBuffer) Send(eventInfo types.EventInfo, recipients []types.Id) types.Error {
+func (sb *fanOutStreamBuffer) Send(eventInfo types.EventInfo, recipients []types.Id) (uint64, types.Error) {
 	sb.lock.Lock()
 	defer sb.lock.Unlock()
 	index := sb.counter.Inc() - 1
@@ -67,7 +67,7 @@ func (sb *fanOutStreamBuffer) Send(eventInfo types.EventInfo, recipients []types
 			sb.events[userId] = append(events, event)
 		}
 	}
-	return nil
+	return index, nil
 }
 
 func (sb *fanOutStreamBuffer) Max() uint64 {

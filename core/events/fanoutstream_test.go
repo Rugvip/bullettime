@@ -30,16 +30,16 @@ func TestFanOutStream(t *testing.T) {
 	}
 	buffer := fanOutTestBuffer{t, b}
 
-	buffer.Push("event1", "user1", "user2")
+	buffer.Push("event1", 0, "user1", "user2")
 	buffer.Select("user1", 0, 2, 0, 1, "event1")
 	buffer.Select("user2", 0, 1, 0, 1, "event1")
 	buffer.Select("user1", 0, 0, 0, 0)
 	buffer.Select("user3", 0, 2, 0, 1)
 	buffer.Select("user0", 0, 2, 0, 1)
-	buffer.Push("event2", "user1")
+	buffer.Push("event2", 1, "user1")
 	buffer.Select("user1", 0, 2, 0, 2, "event1", "event2")
 	buffer.Select("user2", 0, 2, 0, 2, "event1")
-	buffer.Push("event3", "user1", "user3")
+	buffer.Push("event3", 2, "user1", "user3")
 	buffer.Select("user1", 0, 3, 0, 3, "event1", "event2", "event3")
 	buffer.Select("user1", 0, 2, 0, 2, "event1", "event2")
 	buffer.Select("user1", 1, 3, 1, 3, "event2", "event3")
@@ -58,12 +58,12 @@ type fanOutTestBuffer struct {
 	buffer interfaces.FanOutStream
 }
 
-func (b *fanOutTestBuffer) Push(id string, users ...string) {
+func (b *fanOutTestBuffer) Push(id string, expectedIndex uint64, users ...string) {
 	userIds := make([]types.Id, len(users))
 	for i, user := range users {
 		userIds[i] = types.Id(types.NewUserId(user, "test"))
 	}
-	err := b.buffer.Send(types.EventInfo{
+	index, err := b.buffer.Send(types.EventInfo{
 		EventId:   types.Id(types.NewEventId(id, "test")),
 		Sender:    types.Id(types.NewUserId("tester", "test")),
 		ContextId: types.Id(types.NewRoomId("room1", "test")),
@@ -71,6 +71,10 @@ func (b *fanOutTestBuffer) Push(id string, users ...string) {
 	}, userIds)
 	if err != nil {
 		b.t.Fatal("error pushing signal: ", err)
+	}
+	if index != expectedIndex {
+		debug.PrintStack()
+		b.t.Fatal("invalid index, expected %d but got %d", expectedIndex, index)
 	}
 }
 

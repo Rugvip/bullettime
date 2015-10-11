@@ -47,7 +47,7 @@ func NewFanInStreamBuffer(counter interfaces.Counter) (interfaces.FanInStream, e
 	}, nil
 }
 
-func (s *fanInStream) Send(eventInfo types.EventInfo, recipient types.Id) types.Error {
+func (s *fanInStream) Send(eventInfo types.EventInfo, recipient types.Id) (uint64, types.Error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -60,7 +60,7 @@ func (s *fanInStream) Send(eventInfo types.EventInfo, recipient types.Id) types.
 	} else {
 		*segment = append(*segment, indexed)
 	}
-	return nil
+	return index, nil
 }
 
 func (s *fanInStream) Max() uint64 {

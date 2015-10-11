@@ -65,7 +65,7 @@ type Counter interface {
 // A stream where each event has multiple recipients, but queries are done for a single recipient
 type FanOutStream interface {
 	// Sends an event to a set of recipients
-	Send(eventInfo types.EventInfo, recipients []types.Id) types.Error
+	Send(eventInfo types.EventInfo, recipients []types.Id) (index uint64, err types.Error)
 
 	// Gets the current maximum index, this is the highest index of any event + 1
 	Max() uint64
@@ -82,7 +82,7 @@ type FanOutStream interface {
 // A stream where each even has a single recipient, but queries can span multiple recipients
 type FanInStream interface {
 	// Sends an event to a single recipient
-	Send(eventInfo types.EventInfo, recipient types.Id) types.Error
+	Send(eventInfo types.EventInfo, recipient types.Id) (index uint64, err types.Error)
 
 	// Gets the current maximum index, this is the highest index of any event + 1
 	Max() uint64
