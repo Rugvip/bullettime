@@ -32,9 +32,9 @@ type streamMux struct {
 	channels map[types.UserId]userChannels
 }
 
-type userChannels []chan types.IndexedEvent
+type userChannels []chan matrixTypes.IndexedEvent
 
-func (chs *userChannels) send(event types.IndexedEvent) matrixTypes.Error {
+func (chs *userChannels) send(event matrixTypes.IndexedEvent) matrixTypes.Error {
 	for _, ch := range *chs {
 		ch <- event
 		close(ch)
@@ -43,7 +43,7 @@ func (chs *userChannels) send(event types.IndexedEvent) matrixTypes.Error {
 	return nil
 }
 
-func (chs *userChannels) close(ch chan types.IndexedEvent) {
+func (chs *userChannels) close(ch chan matrixTypes.IndexedEvent) {
 	l := len(*chs)
 	for i, channel := range *chs {
 		if ch == channel {
@@ -56,13 +56,13 @@ func (chs *userChannels) close(ch chan types.IndexedEvent) {
 	}
 }
 
-func (chs *userChannels) make() chan types.IndexedEvent {
-	channel := make(chan types.IndexedEvent, 1)
+func (chs *userChannels) make() chan matrixTypes.IndexedEvent {
+	channel := make(chan matrixTypes.IndexedEvent, 1)
 	*chs = append(*chs, channel)
 	return channel
 }
 
-func (s *streamMux) Listen(userId types.UserId, cancel chan struct{}) (chan types.IndexedEvent, matrixTypes.Error) {
+func (s *streamMux) Listen(userId types.UserId, cancel chan struct{}) (chan matrixTypes.IndexedEvent, matrixTypes.Error) {
 	s.lock.Lock()
 	chs := s.channels[userId]
 	channel := chs.make()
@@ -84,7 +84,7 @@ func (s *streamMux) Listen(userId types.UserId, cancel chan struct{}) (chan type
 	return channel, nil
 }
 
-func (s *streamMux) Send(userIds []types.UserId, event types.IndexedEvent) matrixTypes.Error {
+func (s *streamMux) Send(userIds []types.UserId, event matrixTypes.IndexedEvent) matrixTypes.Error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	for _, userId := range userIds {

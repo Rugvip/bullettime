@@ -49,7 +49,7 @@ type eventService struct {
 	membershipStore  interfaces.MembershipStore
 }
 
-func (s eventService) Event(user ct.UserId, eventId ct.EventId) (ct.Event, types.Error) {
+func (s eventService) Event(user ct.UserId, eventId ct.EventId) (types.Event, types.Error) {
 	event, err := s.eventProvider.Event(user, eventId)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (s eventService) Range(
 	limit uint,
 	cancel chan struct{},
 ) (chunk *types.EventStreamRange, err types.Error) {
-	var eventCh chan ct.IndexedEvent
+	var eventCh chan types.IndexedEvent
 
 	if from == nil || to == nil || from.MessageIndex > to.MessageIndex {
 		eventCh, err = s.asyncEventSource.Listen(user, cancel)
@@ -152,7 +152,7 @@ func (s eventService) Range(
 		}
 
 		gotEvent := false
-		var event ct.IndexedEvent
+		var event types.IndexedEvent
 		if blocking && len(messages)+len(presences)+len(typings) == 0 {
 			event, gotEvent = <-eventCh
 		} else {
@@ -204,7 +204,7 @@ func (s eventService) Range(
 	start := types.NewStreamToken(fromMessage, fromPresence, fromTyping)
 	end := types.NewStreamToken(messageIndex, presenceIndex, typingIndex)
 
-	events := make([]ct.Event, len(messages)+len(presences)+len(typings))
+	events := make([]types.Event, len(messages)+len(presences)+len(typings))
 
 	for i, _ := range events {
 		if i < len(messages) {
@@ -312,7 +312,7 @@ func (s eventService) Messages(
 	start := types.NewStreamToken(messagesStart, presenceIndex, typingIndex)
 	end := types.NewStreamToken(messagesEnd, presenceIndex, typingIndex)
 
-	events := make([]ct.Event, len(messages))
+	events := make([]types.Event, len(messages))
 
 	for i, _ := range events {
 		events[i] = messages[i].Event()

@@ -44,8 +44,8 @@ type syncService struct {
 	membershipStore interfaces.MembershipStore
 }
 
-func indexedToEvents(indexed []ct.IndexedEvent) []ct.Event {
-	events := make([]ct.Event, len(indexed))
+func indexedToEvents(indexed []types.IndexedEvent) []types.Event {
+	events := make([]types.Event, len(indexed))
 	for i, indexedEvent := range indexed {
 		events[i] = indexedEvent.Event()
 	}

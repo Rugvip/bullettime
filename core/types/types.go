@@ -19,25 +19,6 @@ import (
 	"time"
 )
 
-type Content interface{}
-
-type Timestamp struct {
-	time.Time
-}
-
-type Event interface {
-	GetContent() interface{}
-	GetEventType() string
-	GetRoomId() *RoomId
-	GetUserId() *UserId
-	GetEventKey() Id
-}
-
-type IndexedEvent interface {
-	Event() Event
-	Index() uint64
-}
-
 type EventInfo struct {
 	ContextId Id
 	EventId   Id
@@ -49,8 +30,8 @@ func NewEventInfo(contextId, eventId, sender Id, eventType string) EventInfo {
 	return EventInfo{contextId, eventId, sender, eventType}
 }
 
-type TypedContent interface {
-	GetEventType() string
+type Timestamp struct {
+	time.Time
 }
 
 func (ts Timestamp) MarshalJSON() ([]byte, error) {

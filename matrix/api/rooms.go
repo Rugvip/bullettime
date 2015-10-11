@@ -228,7 +228,7 @@ func (e roomsEndpoint) handlePutState(rw http.ResponseWriter, req *http.Request,
 		stateKey = params[2].Value
 	}
 
-	var content ct.TypedContent
+	var content types.TypedContent
 	switch eventType {
 	case types.EventTypeMembership:
 		content = &types.MembershipEventContent{}

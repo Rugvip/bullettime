@@ -68,7 +68,7 @@ func (db *roomDb) RoomExists(id types.RoomId) (bool, matrixTypes.Error) {
 	return true, nil
 }
 
-func (db *roomDb) SetRoomState(roomId types.RoomId, userId types.UserId, content types.TypedContent, stateKey string) (*matrixTypes.State, matrixTypes.Error) {
+func (db *roomDb) SetRoomState(roomId types.RoomId, userId types.UserId, content matrixTypes.TypedContent, stateKey string) (*matrixTypes.State, matrixTypes.Error) {
 	db.roomsLock.RLock()
 	defer db.roomsLock.RUnlock()
 	room := db.rooms[roomId]

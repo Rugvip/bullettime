@@ -36,7 +36,7 @@ type indexedTypingState struct {
 	index uint64
 }
 
-func (m *indexedTypingState) Event() types.Event {
+func (m *indexedTypingState) Event() matrixTypes.Event {
 	return &m.event
 }
 
@@ -114,14 +114,14 @@ func (s *typingStream) Range(
 	roomSet map[types.RoomId]struct{},
 	from, to uint64,
 	limit uint,
-) ([]types.IndexedEvent, matrixTypes.Error) {
-	var result []types.IndexedEvent
+) ([]matrixTypes.IndexedEvent, matrixTypes.Error) {
+	var result []matrixTypes.IndexedEvent
 	if len(roomSet) == 0 || from >= to {
 		return result, nil
 	}
 	s.lock.RLock()
 	defer s.lock.RUnlock()
-	result = make([]types.IndexedEvent, 0, len(roomSet))
+	result = make([]matrixTypes.IndexedEvent, 0, len(roomSet))
 	for room := range roomSet {
 		state := s.states[room]
 		if state.index >= from && state.index < to {

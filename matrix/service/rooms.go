@@ -169,7 +169,7 @@ var disallowedMessageTypes map[string]struct{} = map[string]struct{}{
 func (s roomService) AddMessage(
 	room ct.RoomId,
 	caller ct.UserId,
-	content ct.TypedContent,
+	content types.TypedContent,
 ) (*types.Message, types.Error) {
 	eventType := content.GetEventType()
 	if _, ok := disallowedMessageTypes[eventType]; ok {
@@ -211,7 +211,7 @@ func (s roomService) State(
 func (s roomService) SetState(
 	room ct.RoomId,
 	caller ct.UserId,
-	content ct.TypedContent,
+	content types.TypedContent,
 	stateKey string,
 ) (*types.State, types.Error) {
 	userIdStateKey, parseErr := ct.ParseUserId(stateKey)
@@ -286,7 +286,7 @@ func (s roomService) SetState(
 func (s roomService) setState(
 	room ct.RoomId,
 	user ct.UserId,
-	content ct.TypedContent,
+	content types.TypedContent,
 	stateKey string,
 ) (*types.State, types.Error) {
 	log.Printf("Setting state: %#v, %#v, %#v, %#v", room, user, content, stateKey)
@@ -304,7 +304,7 @@ func (s roomService) setState(
 func (s roomService) sendMessage(
 	room ct.RoomId,
 	user ct.UserId,
-	content ct.TypedContent,
+	content types.TypedContent,
 ) (*types.Message, types.Error) {
 	log.Printf("Sending message: %#v, %#v, %#v, %#v", room, user, content)
 

@@ -23,7 +23,7 @@ import (
 
 type InitialSync struct {
 	End      StreamToken   `json:"end"`
-	Presence []ct.Event    `json:"presence"`
+	Presence []Event       `json:"presence"`
 	Rooms    []RoomSummary `json:"rooms"`
 }
 
@@ -37,11 +37,11 @@ type RoomSummary struct {
 
 type RoomInitialSync struct {
 	RoomSummary
-	Presence []ct.Event `json:"presence"`
+	Presence []Event `json:"presence"`
 }
 
 type EventStreamRange struct {
-	Events []ct.Event  `json:"chunk"`
+	Events []Event     `json:"chunk"`
 	Start  StreamToken `json:"start"`
 	End    StreamToken `json:"end"`
 }
@@ -62,7 +62,7 @@ func (t StreamToken) String() string {
 	return fmt.Sprintf("s%d_%d_%d", t.MessageIndex, t.PresenceIndex, t.TypingIndex)
 }
 
-func NewEventStreamRange(events []ct.Event, start StreamToken, end StreamToken) *EventStreamRange {
+func NewEventStreamRange(events []Event, start StreamToken, end StreamToken) *EventStreamRange {
 	return &EventStreamRange{
 		Events: events,
 		Start:  start,

@@ -32,7 +32,7 @@ type RoomService interface {
 	AddMessage(
 		room ct.RoomId,
 		caller ct.UserId,
-		content ct.TypedContent,
+		content types.TypedContent,
 	) (*types.Message, types.Error)
 	State(
 		room ct.RoomId,
@@ -42,7 +42,7 @@ type RoomService interface {
 	SetState(
 		room ct.RoomId,
 		caller ct.UserId,
-		content ct.TypedContent,
+		content types.TypedContent,
 		stateKey string,
 	) (*types.State, types.Error)
 }
@@ -87,7 +87,7 @@ type Token interface {
 }
 
 type EventService interface {
-	Event(caller ct.UserId, eventId ct.EventId) (ct.Event, types.Error)
+	Event(caller ct.UserId, eventId ct.EventId) (types.Event, types.Error)
 	Range(
 		caller ct.UserId,
 		from, to *types.StreamToken,
@@ -112,7 +112,7 @@ type UserStore interface {
 type RoomStore interface {
 	CreateRoom(id ct.RoomId) (exists bool, err types.Error)
 	RoomExists(ct.RoomId) (bool, types.Error)
-	SetRoomState(roomId ct.RoomId, userId ct.UserId, content ct.TypedContent, stateKey string) (*types.State, types.Error)
+	SetRoomState(roomId ct.RoomId, userId ct.UserId, content types.TypedContent, stateKey string) (*types.State, types.Error)
 	RoomState(roomId ct.RoomId, eventType, stateKey string) (*types.State, types.Error)
 	EntireRoomState(roomId ct.RoomId) ([]*types.State, types.Error)
 }
@@ -133,11 +133,11 @@ type MembershipStore interface {
 }
 
 type AsyncEventSink interface {
-	Send(userIds []ct.UserId, event ct.IndexedEvent) types.Error
+	Send(userIds []ct.UserId, event types.IndexedEvent) types.Error
 }
 
 type AsyncEventSource interface {
-	Listen(user ct.UserId, cancel chan struct{}) (chan ct.IndexedEvent, types.Error)
+	Listen(user ct.UserId, cancel chan struct{}) (chan types.IndexedEvent, types.Error)
 }
 
 type IndexedEventSource interface {
@@ -148,23 +148,23 @@ type IndexedEventSource interface {
 		roomSet map[ct.RoomId]struct{},
 		from, to uint64,
 		limit uint,
-	) ([]ct.IndexedEvent, types.Error)
+	) ([]types.IndexedEvent, types.Error)
 }
 
 type EventSink interface {
-	Send(event ct.Event) (uint64, types.Error)
+	Send(event types.Event) (uint64, types.Error)
 }
 
 type EventProvider interface {
-	Event(ct.UserId, ct.EventId) (ct.Event, types.Error)
+	Event(ct.UserId, ct.EventId) (types.Event, types.Error)
 }
 
 type ProfileEventSink interface {
-	SetUserProfile(ct.UserId, types.UserProfile) (ct.IndexedEvent, types.Error)
+	SetUserProfile(ct.UserId, types.UserProfile) (types.IndexedEvent, types.Error)
 }
 
 type PresenceEventSink interface {
-	SetUserStatus(ct.UserId, types.UserStatus) (ct.IndexedEvent, types.Error)
+	SetUserStatus(ct.UserId, types.UserStatus) (types.IndexedEvent, types.Error)
 }
 
 type ProfileProvider interface {

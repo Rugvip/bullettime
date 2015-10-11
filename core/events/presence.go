@@ -36,7 +36,7 @@ type indexedPresenceEvent struct {
 	index uint64
 }
 
-func (m *indexedPresenceEvent) Event() types.Event {
+func (m *indexedPresenceEvent) Event() matrixTypes.Event {
 	return &m.event
 }
 
@@ -57,19 +57,19 @@ func NewPresenceStream(
 	}, nil
 }
 
-func (s *presenceStream) SetUserProfile(userId types.UserId, profile matrixTypes.UserProfile) (types.IndexedEvent, matrixTypes.Error) {
+func (s *presenceStream) SetUserProfile(userId types.UserId, profile matrixTypes.UserProfile) (matrixTypes.IndexedEvent, matrixTypes.Error) {
 	return s.update(userId, func(user *matrixTypes.User) {
 		user.UserProfile = profile
 	})
 }
 
-func (s *presenceStream) SetUserStatus(userId types.UserId, status matrixTypes.UserStatus) (types.IndexedEvent, matrixTypes.Error) {
+func (s *presenceStream) SetUserStatus(userId types.UserId, status matrixTypes.UserStatus) (matrixTypes.IndexedEvent, matrixTypes.Error) {
 	return s.update(userId, func(user *matrixTypes.User) {
 		user.UserStatus = status
 	})
 }
 
-func (s *presenceStream) update(userId types.UserId, updateFunc updateFunc) (types.IndexedEvent, matrixTypes.Error) {
+func (s *presenceStream) update(userId types.UserId, updateFunc updateFunc) (matrixTypes.IndexedEvent, matrixTypes.Error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	indexed, existed := s.events[userId]
@@ -122,14 +122,14 @@ func (s *presenceStream) Range(
 	roomSet map[types.RoomId]struct{},
 	from, to uint64,
 	limit uint,
-) ([]types.IndexedEvent, matrixTypes.Error) {
-	var result []types.IndexedEvent
+) ([]matrixTypes.IndexedEvent, matrixTypes.Error) {
+	var result []matrixTypes.IndexedEvent
 	if len(userSet) == 0 || from >= to {
 		return result, nil
 	}
 	s.lock.RLock()
 	defer s.lock.RUnlock()
-	result = make([]types.IndexedEvent, 0, len(userSet))
+	result = make([]matrixTypes.IndexedEvent, 0, len(userSet))
 	for user := range userSet {
 		event := s.events[user]
 		if event.index >= from && event.index < to {

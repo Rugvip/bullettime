@@ -26,11 +26,11 @@ import (
 )
 
 type indexedEvent struct {
-	event types.Event
+	event matrixTypes.Event
 	index uint64
 }
 
-func (m *indexedEvent) Event() types.Event {
+func (m *indexedEvent) Event() matrixTypes.Event {
 	return m.event
 }
 
@@ -61,7 +61,7 @@ func NewMessageStream(
 	}, nil
 }
 
-func (s *messageStream) Send(event types.Event) (uint64, matrixTypes.Error) {
+func (s *messageStream) Send(event matrixTypes.Event) (uint64, matrixTypes.Error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -89,7 +89,7 @@ func (s *messageStream) Send(event types.Event) (uint64, matrixTypes.Error) {
 	return index, nil
 }
 
-func extraUserForEvent(event types.Event) *types.UserId {
+func extraUserForEvent(event matrixTypes.Event) *types.UserId {
 	if event.GetEventType() == matrixTypes.EventTypeMembership {
 		membership := event.GetContent().(*matrixTypes.MembershipEventContent).Membership
 		isInvited := membership == matrixTypes.MembershipInvited
@@ -115,7 +115,7 @@ func extraUserForEvent(event types.Event) *types.UserId {
 func (s *messageStream) Event(
 	user types.UserId,
 	eventId types.EventId,
-) (types.Event, matrixTypes.Error) {
+) (matrixTypes.Event, matrixTypes.Error) {
 	s.lock.RLock()
 	indexed := s.byId[types.Id(eventId)]
 	s.lock.RUnlock()
@@ -142,10 +142,10 @@ func (s *messageStream) Range(
 	roomSet map[types.RoomId]struct{},
 	from, to uint64,
 	limit uint,
-) ([]types.IndexedEvent, matrixTypes.Error) {
+) ([]matrixTypes.IndexedEvent, matrixTypes.Error) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
-	result := make([]types.IndexedEvent, 0, limit)
+	result := make([]matrixTypes.IndexedEvent, 0, limit)
 	reverse := to < from
 
 	max := atomic.LoadUint64(&s.max)

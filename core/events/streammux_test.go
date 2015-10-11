@@ -80,7 +80,7 @@ type StreamMuxTest struct {
 	t *testing.T
 }
 
-func (es StreamMuxTest) send(event types.Event, index uint64, ids ...string) {
+func (es StreamMuxTest) send(event matrixTypes.Event, index uint64, ids ...string) {
 	userIds := make([]types.UserId, len(ids))
 	for i := range ids {
 		userIds[i] = types.NewUserId(ids[i], "test")

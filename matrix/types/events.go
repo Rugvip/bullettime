@@ -32,6 +32,25 @@ const (
 	EventTypePresence    = "m.presence"
 )
 
+type Content interface{}
+
+type Event interface {
+	GetContent() interface{}
+	GetEventType() string
+	GetRoomId() *ct.RoomId
+	GetUserId() *ct.UserId
+	GetEventKey() ct.Id
+}
+
+type TypedContent interface {
+	GetEventType() string
+}
+
+type IndexedEvent interface {
+	Event() Event
+	Index() uint64
+}
+
 type BaseEvent struct {
 	EventType string `json:"type"`
 }
@@ -42,7 +61,7 @@ func (e *BaseEvent) GetEventType() string {
 
 type Message struct {
 	BaseEvent
-	Content   ct.Content   `json:"content"`
+	Content   Content      `json:"content"`
 	EventId   ct.EventId   `json:"event_id"`
 	RoomId    ct.RoomId    `json:"room_id"`
 	UserId    ct.UserId    `json:"user_id"`
