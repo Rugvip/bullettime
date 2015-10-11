@@ -30,6 +30,15 @@ func NewEventInfo(contextId, eventId, sender Id, eventType string) EventInfo {
 	return EventInfo{contextId, eventId, sender, eventType}
 }
 
+type IndexedEventInfo struct {
+	EventInfo
+	Index uint64
+}
+
+func NewIndexedEventInfo(eventInfo EventInfo, index uint64) IndexedEventInfo {
+	return IndexedEventInfo{eventInfo, index}
+}
+
 type Timestamp struct {
 	time.Time
 }
