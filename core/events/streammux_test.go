@@ -85,7 +85,7 @@ func (es StreamMuxTest) send(event matrixTypes.Event, index uint64, ids ...strin
 	for i := range ids {
 		userIds[i] = types.NewUserId(ids[i], "test")
 	}
-	err := es.Send(userIds, &indexedEvent{event, index})
+	err := es.Send(userIds, &muxTestEvent{event, index})
 	if err != nil {
 		es.t.Fatal(err)
 	}
@@ -101,4 +101,17 @@ func typing(id string, ids ...string) *matrixTypes.TypingEvent {
 	}
 	event.Content.UserIds = userIds
 	return event
+}
+
+type muxTestEvent struct {
+	event matrixTypes.Event
+	index uint64
+}
+
+func (m *muxTestEvent) Event() matrixTypes.Event {
+	return m.event
+}
+
+func (m *muxTestEvent) Index() uint64 {
+	return m.index
 }

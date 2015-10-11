@@ -19,15 +19,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/matrix-org/bullettime/core/db"
-	"github.com/matrix-org/bullettime/core/types"
+	cd "github.com/matrix-org/bullettime/core/db"
+	ce "github.com/matrix-org/bullettime/core/events"
+	ct "github.com/matrix-org/bullettime/core/types"
 	"github.com/matrix-org/bullettime/matrix/interfaces"
 	"github.com/matrix-org/bullettime/matrix/stores"
-	matrixTypes "github.com/matrix-org/bullettime/matrix/types"
+	"github.com/matrix-org/bullettime/matrix/types"
 )
 
 func TestMessageStream(t *testing.T) {
-	memberCache, err := db.NewIdMultiMap()
+	memberCache, err := cd.NewIdMultiMap()
 	if err != nil {
 		panic(err)
 	}
@@ -35,7 +36,7 @@ func TestMessageStream(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	streamMux, err := NewStreamMux()
+	streamMux, err := ce.NewStreamMux()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +74,7 @@ type MessageStreamTest struct {
 	t *testing.T
 }
 
-func (es MessageStreamTest) push(event *matrixTypes.Message, expectedIndex uint64) {
+func (es MessageStreamTest) push(event *types.Message, expectedIndex uint64) {
 	index, err := es.Send(event)
 	if err != nil {
 		es.t.Fatal(err)
@@ -84,9 +85,9 @@ func (es MessageStreamTest) push(event *matrixTypes.Message, expectedIndex uint6
 }
 
 func (es MessageStreamTest) check(from, to uint64, limit uint, expect ...string) {
-	user := types.NewUserId("test", "test")
-	roomSet := map[types.RoomId]struct{}{
-		types.NewRoomId("room", "test"): struct{}{},
+	user := ct.NewUserId("test", "test")
+	roomSet := map[ct.RoomId]struct{}{
+		ct.NewRoomId("room", "test"): struct{}{},
 	}
 	result, err := es.Range(&user, nil, roomSet, from, to, limit)
 	if err != nil {
@@ -97,19 +98,19 @@ func (es MessageStreamTest) check(from, to uint64, limit uint, expect ...string)
 		es.t.Fatal(str+": result length should be", len(expect), "was", len(result))
 	}
 	for i := range result {
-		id := result[i].Event().GetContent().(matrixTypes.CreateEventContent).Creator.Id
+		id := result[i].Event().GetContent().(types.CreateEventContent).Creator.Id
 		if id != expect[i] {
 			es.t.Fatal(str+": result", i, "should be", expect[i], "was", id)
 		}
 	}
 }
 
-func message(eventId, userId string) *matrixTypes.Message {
-	event := matrixTypes.Message{}
+func message(eventId, userId string) *types.Message {
+	event := types.Message{}
 	event.EventType = "m.room.create"
-	event.Content = matrixTypes.CreateEventContent{types.NewUserId(userId, "test")}
-	event.RoomId = types.NewRoomId("room", "test")
-	event.Timestamp = types.Timestamp{time.Now()}
-	event.EventId = types.NewEventId(eventId, "test")
+	event.Content = types.CreateEventContent{ct.NewUserId(userId, "test")}
+	event.RoomId = ct.NewRoomId("room", "test")
+	event.Timestamp = ct.Timestamp{time.Now()}
+	event.EventId = ct.NewEventId(eventId, "test")
 	return &event
 }

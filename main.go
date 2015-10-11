@@ -20,8 +20,9 @@ import (
 	"os"
 
 	"github.com/matrix-org/bullettime/core/db"
-	"github.com/matrix-org/bullettime/core/events"
+	ce "github.com/matrix-org/bullettime/core/events"
 	"github.com/matrix-org/bullettime/matrix/api"
+	"github.com/matrix-org/bullettime/matrix/events"
 	"github.com/matrix-org/bullettime/matrix/service"
 	"github.com/matrix-org/bullettime/matrix/stores"
 	"github.com/matrix-org/bullettime/matrix/types"
@@ -58,7 +59,7 @@ func setupApiEndpoint() http.Handler {
 	if err != nil {
 		panic(err)
 	}
-	streamMux, err := events.NewStreamMux()
+	streamMux, err := ce.NewStreamMux()
 	if err != nil {
 		panic(err)
 	}

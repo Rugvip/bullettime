@@ -17,9 +17,10 @@ package events
 import (
 	"testing"
 
-	"github.com/matrix-org/bullettime/core/db"
-	"github.com/matrix-org/bullettime/core/events"
+	cd "github.com/matrix-org/bullettime/core/db"
+	ce "github.com/matrix-org/bullettime/core/events"
 	ct "github.com/matrix-org/bullettime/core/types"
+	"github.com/matrix-org/bullettime/matrix/events"
 	"github.com/matrix-org/bullettime/matrix/interfaces"
 	"github.com/matrix-org/bullettime/matrix/service"
 	"github.com/matrix-org/bullettime/matrix/stores"
@@ -37,11 +38,11 @@ type services struct {
 }
 
 func setup() services {
-	stateStore, err := db.NewStateStore()
+	stateStore, err := cd.NewStateStore()
 	if err != nil {
 		panic(err)
 	}
-	roomStore, err := db.NewRoomDb()
+	roomStore, err := cd.NewRoomDb()
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +50,7 @@ func setup() services {
 	if err != nil {
 		panic(err)
 	}
-	aliasCache, err := db.NewIdMap()
+	aliasCache, err := cd.NewIdMap()
 	if err != nil {
 		panic(err)
 	}
@@ -57,7 +58,7 @@ func setup() services {
 	if err != nil {
 		panic(err)
 	}
-	memberCache, err := db.NewIdMultiMap()
+	memberCache, err := cd.NewIdMultiMap()
 	if err != nil {
 		panic(err)
 	}
@@ -65,7 +66,7 @@ func setup() services {
 	if err != nil {
 		panic(err)
 	}
-	streamMux, err := events.NewStreamMux()
+	streamMux, err := ce.NewStreamMux()
 	if err != nil {
 		panic(err)
 	}
