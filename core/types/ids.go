@@ -20,6 +20,7 @@ import (
 	"strings"
 	"sync"
 	"unicode/utf8"
+	"unsafe"
 
 	"github.com/matrix-org/bullettime/utils"
 )
@@ -213,4 +214,31 @@ func domainName(id int) string {
 		log.Panicf("invalid domain index: %d, should be [1, %d]", id, len(domainNames))
 	}
 	return domainNames[id]
+}
+
+type Ids []Id
+
+func (ids *Ids) toUserIds() []UserId {
+	return *(*[]UserId)(unsafe.Pointer(ids))
+}
+func (ids *Ids) toRoomIds() []RoomId {
+	return *(*[]RoomId)(unsafe.Pointer(ids))
+}
+func (ids *Ids) toEventIds() []EventId {
+	return *(*[]EventId)(unsafe.Pointer(ids))
+}
+func (ids *Ids) toAliases() []Alias {
+	return *(*[]Alias)(unsafe.Pointer(ids))
+}
+func IdsFromUserIds(ids []UserId) Ids {
+	return *(*Ids)(unsafe.Pointer(&ids))
+}
+func IdsFromRoomIds(ids []RoomId) Ids {
+	return *(*Ids)(unsafe.Pointer(&ids))
+}
+func IdsFromEventIds(ids []EventId) Ids {
+	return *(*Ids)(unsafe.Pointer(&ids))
+}
+func IdsFromAliases(ids []Alias) Ids {
+	return *(*Ids)(unsafe.Pointer(&ids))
 }
